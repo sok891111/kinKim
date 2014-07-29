@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2014 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <link rel="stylesheet"
+        href="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.css" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.1.0/jquery.mobile-1.1.0.min.js"></script>
+        <script src="https://cdn.socket.io/socket.io-1.0.6.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+        <title>위치기반 채팅 프로그램 prototype</title>
+        <style>   
+          * { margin: 0; padding: 0;  }
+          body { font: 13px Helvetica, Arial; }
+          form { bottom: 40px; width: 93%; }
+          form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+          .userName{ position: fixed; bottom: 40px; width:93%; }
+            /*form button { width: 4%; background: rgb(130, 224, 255); border: none; padding: 10px;}*/
+          #footer {padding: 3px; position: fixed; bottom: 0px; width: 100%;}
+          #messages { list-style-type: none; margin: 0; padding: 0; }
+          #messages li { padding: 5px 10px; }
+          #messages li:nth-child(odd) { background: #eee; }
+          .messageBox{  max-height:80%;}
+        </style>
+        <script type="text/javascript">
+            var socket =io('http://jin-kim.no-ip.org:8888/');
+            var tapped = 0;
+            var started = false;
+            var nickName ="";
+            var counter;
+            var documentHiehgt;
+            var userAgent = navigator.userAgent.toLowerCase();
+            document.addEventListener("deviceready", onDeviceReady, false);
+            $(document).ready(function(){
+
+                documentHiehgt = $( document ).height();
+                $('#messageBox').height(documentHiehgt*0.7);
+                
+                socket.on('connect',function(){
+                   getLocation();
+                });
+                $("#swipe").on("swipe",function(){
+                    if($('#m').val() =="") return false;
+                        socket.emit("message",$('#m').val());
+                    $('#m').val('');
+                    $('#m').focus();
+                });
+            });
+            socket.on('message',function(json){
+              $('#messages').append($('<li>').text(json.user + " : " + json.msg));
+            });
+            function typing(){
+                var num=0;
+                clearInterval(counter);
+                counter = setInterval(function(){
+                if(++num == 2) {
+                    socket.emit('updateuser',$('#nickName').val());
+                    $('#userName').fadeOut(900);
+                    clearInterval(counter);
+                } },1000);
+            }
+            function onDeviceReady(){
+                 console.log("--------------------------------------------------------------");
+                 console.log(gps.getLongitude());
+            }
+            function getLocation(){
+                  location = {
+                    "lat" : gps.getLatitude(),
+                    "long" : gps.getLongitude()
+                }
+                socket.emit("getLocation",location);
+            }
+
+        </script>
+    </head>
+      <body id = "swipe">
+        <div data-role="page">
+            <div data-role="header">
+                <h1>위치기반 채팅 프로그램 prototype</h1>
+            </div>
+            <div data-role="content">
+                 <div class = "messageBox" id = "messageBox"> 
+                    <ul id="messages"></ul>
+                 </div> 
+                <div class="userName">
+                    <input id="m" autocomplete="off" />
+                    <div class="userName" id = "userName">
+                        닉네임을 입력하세요. 그리고 2초만 기다리세요. 대화가 시작됩니다. 
+                        <input autocomplete="off" id ="nickName" z-index=1 onkeydown = "typing();" />
+                    </div>
+                </div>  
+            </div> 
+        </div>
+        <div data-role="footer" id = "footer">
+            <span sytle="font-size:smaller;text-align:right">   Copyright 2014 by Jin. All Rights Reserved.</span>
+        </div>        
+    </body>
+</html>
