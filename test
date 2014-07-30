@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2014 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+    <head>
+        <title>Socket.IO chat</title>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font: 13px Helvetica, Arial; }
+          form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 65%; }
+          form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+          form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+          #messages { list-style-type: none; margin: 0; padding: 0; }
+          #messages li { padding: 5px 10px; }
+          #messages li:nth-child(odd) { background: #eee; }
+          *{ margin:0; padding:0;}
+          ul,li{list-style:none;}
+          header, aside, section { display:block; }
+          header{ width:100%; }
+          aside{ width:30%; float:right;}
+          section { margin-bottom:10px; width:65%; float:left;}
+          header, aside, section{ margin-top:10px; }
+          header, aside, section{ background-color: bluesky; }
+          .users{ cursor:pointer;}
+          .users:hover{color:red;}
+        </style>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+        <script>
+      var priFlag = false;
+      var cnt = 0;
+      var socket = io.connect('http://local.sj.com');
+      $(document).ready(function(){    
+        socket.on('connect',function(){
+         getLocation();
+          socket.emit("sendmail", null);
+        });
+        $('#aform').submit(function(){
+          socket.emit("message", $('#m').val());
+          $('#m').val('');
+          return false;
+        });
+        socket.on("updateuser",function(users){
+          $('#users').empty();
+          for(u in users){
+            if(users[u] == "" ||users[u] == null )
+              $('#users').append($('<li>').text("익명"));
+            else
+            $('#users').append($('<li onclick = "private(this)" class = "users">').text(users[u]));
+          }
+        });
+        socket.on("message",function(json){
+          $('#messages').append($('<li>').text(json.user +" : " + json.msg));
+          $('li').before('<img src = '+json.profileUrl+'/>');
+          console.log($('#messages').height());
+          $("#test").animate({scrollTop:$('#messages').height()},'fast');
+        });
+
+
+
+
+      });
+      function getLocation() {
+          if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(showPosition);
+          } else { 
+              x.innerHTML = "Geolocation is not supported by this browser.";
+          }
+        }
+        function showPosition(position) {
+          var location = {
+            "lat" : position.coords.latitude,
+            "long" : position.coords.longitude
+          }
+           socket.emit("getLocation",location);
+        }
+    </script>
+    </head>    
+     <body>
+     <section data-role="page">
+  <header data-role="header"><h1>Chat application sample</h1></header>
+  <div data-role="content">
+    <div style = "height : 200px;overflow:auto;" id = "test">
+      <ul id="messages"></ul>
+    </div>
+      <form action="" id ="aform">
+        <input id="m" autocomplete="off" /><button>Send</button>
+      </form>
+      <a href="/auth/facebook">Login with Facebook</a>
+      <aside>
+        <ul id ="users"></ul>
+      </aside>
+      </div>
+    <footer data-role="footer"><h4>메인메뉴 하단</h4></footer>
+  </section>
+  </body>
+</html>
