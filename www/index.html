@@ -42,10 +42,9 @@
           .userName{ position: fixed; bottom: 40px; width:93%; }
             /*form button { width: 4%; background: rgb(130, 224, 255); border: none; padding: 10px;}*/
           #footer {padding: 3px; position: fixed; bottom: 0px; width: 100%;}
-          #messages { list-style-type: none; margin: 0; padding: 0; }
+          #messages { list-style-type: none; margin: 0; padding: 0; overflow-y:auto; overflow-x:hidden; }
           #messages li { padding: 5px 10px; }
           #messages li:nth-child(odd) { background: #eee; }
-          .messageBox{  max-height:80%;}
         </style>
         <script type="text/javascript">
             var socket =io('http://jin-kim.no-ip.org:8888/');
@@ -54,13 +53,21 @@
             var nickName ="";
             var counter;
             var documentHiehgt;
+            var softkeyboardHeight;
             var userAgent = navigator.userAgent.toLowerCase();
-            document.addEventListener("deviceready", onDeviceReady, false);
             $(document).ready(function(){
-
+                document.addEventListener("deviceready", onDeviceReady, false);
                 documentHiehgt = $( document ).height();
-                $('#messageBox').height(documentHiehgt*0.7);
-                
+                $('#messages').height(documentHiehgt*0.7);
+                $(window).resize(function(){
+                    softkeyboardHeight = documentHiehgt - $(window).height();
+                    if(softkeyboardHeight > 0){
+                        onKeyboardShow(softkeyboardHeight);
+                    }
+                    $('#messages').scrollTop(9999);
+                    console.log("window resize 가 실행되었습니다.");
+                });
+
                 socket.on('connect',function(){
                    getLocation();
                 });
@@ -73,6 +80,7 @@
             });
             socket.on('message',function(json){
               $('#messages').append($('<li>').text(json.user + " : " + json.msg));
+               $('#messages').animate({scrollTop:9999},'slow');
             });
             function typing(){
                 var num=0;
@@ -85,15 +93,24 @@
                 } },1000);
             }
             function onDeviceReady(){
+                //document.addEventListener("showkeyboard", onKeyboardShow , false);
+                document.addEventListener("hidekeyboard", onKeyboardHide , false);
+            }
+            function onKeyboardHide(){
+                //softkeyboardHeight = documentHiehgt - $(window).height();
+                $('#messages').height(documentHiehgt*0.7);
+            }
+            function onKeyboardShow(softkeyboardHeight){
+                $('#messages').height(documentHiehgt*0.7-softkeyboardHeight);   
             }
             function getLocation(){
                 var location = {
                     "lat" : gps.getLatitude(),
                     "long" : gps.getLongitude()
-                }
+                } 
                 socket.emit("getLocation",location);
             }
-
+          
         </script>
     </head>
       <body id = "swipe">
@@ -102,9 +119,7 @@
                 <h1>위치기반 채팅 프로그램 prototype</h1>
             </div>
             <div data-role="content">
-                 <div class = "messageBox" id = "messageBox"> 
                     <ul id="messages"></ul>
-                 </div> 
                 <div class="userName">
                     <input id="m" autocomplete="off" />
                     <div class="userName" id = "userName">
