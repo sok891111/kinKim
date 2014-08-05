@@ -122,7 +122,7 @@ public class GPSTrackerTest extends Service implements LocationListener {
 	 *  
 	 * */
 	@JavascriptInterface
-	public void getGpsLocation(){
+	public String getGpsLocation(){
 	  if(locationManager != null){
         	location = locationManager
                     .getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -136,6 +136,7 @@ public class GPSTrackerTest extends Service implements LocationListener {
         		Log.d("GPS Provider", "------------------------------------------------------------------- ");
         	}
         }
+        return "";
 	}
 	
 	@JavascriptInterface
